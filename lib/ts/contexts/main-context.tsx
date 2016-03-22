@@ -2,7 +2,7 @@ import {Parcel} from "../libs/parcel";
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-import {Route} from '../constants/enums'
+import {Route} from '../constants/constants'
 
 export default class MainContext extends Parcel<{},{}>{
   initialState(){

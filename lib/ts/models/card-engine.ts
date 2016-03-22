@@ -1,11 +1,12 @@
 import * as _ from 'lodash';
 
 import Card from "./card";
-import {Suit} from "../constants/enums";
+import {Suit} from "../constants/constants";
 import Player from "./player";
 
-class CardEngine {
-  private total:number;
+export default class CardEngine {
+  public total:number;
+  public rest:number;
   private cards:Card[];
   private gets:any;
   private turnNumber:number;
@@ -18,28 +19,37 @@ class CardEngine {
     return this.players[this.turnNumber];
   }
 
-  choose(player):(card:Card)=>(card:Card)=>Player {
+  choose():(card:Card)=>(card:Card)=>Player {
     return (card)=> {
       if (card.isOpened) {
         return null;
       }
+
+      card.open();
 
       return (nextCard):Player=> {
         if (nextCard.isOpened) {
           return null;
         }
 
-        if (this.isSame(card, nextCard)) {
-          this.getCards(player, card, nextCard);
-        }
+        nextCard.open();
 
-        this.turnNext();
-        return this.playerNow;
+        if (this.isSame(card, nextCard)) {
+          this.getCards(this.playerNow, card, nextCard);
+          return this.playerNow;
+        }else{
+          card.close();
+          nextCard.close();
+
+          this.turnNext();
+          return this.playerNow;
+        }
       }
     }
   }
 
   getCards(player, card, nextCard) {
+    this.rest -= 2;
     this.gets[player.name].push(card, nextCard);
   }
 
@@ -64,14 +74,14 @@ class CardEngine {
   }
 
   isSame(card, nextCard):boolean {
-    return card.number === nextCard
+    return card.number === nextCard.number
   }
 
   reset():void {
     let {eachSuitNumber, suits, players} = this;
 
     this.cards = this.generateCards(eachSuitNumber, suits);
-    this.total = this.cards.length;
+    this.total = this.rest = this.cards.length;
     this.gets = this.generateGets(players);
     this.turnNumber = 0;
   }

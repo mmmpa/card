@@ -10,7 +10,7 @@ import FooterComponent from "./components/footer-component";
 import GameComponent from "./components/game-component";
 import GameSelectorComponent from "./components/game-selector-component";
 
-import {Route} from './constants/enums'
+import {Route} from './constants/constants'
 
 class Starter {
   static run(dom) {
