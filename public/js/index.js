@@ -34499,6 +34499,13 @@ exports.default = HeaderComponent;
     Route[Route["Game"] = 1] = "Game";
 })(exports.Route || (exports.Route = {}));
 var Route = exports.Route;
+(function (Suit) {
+    Suit[Suit["Spade"] = 0] = "Spade";
+    Suit[Suit["Dia"] = 1] = "Dia";
+    Suit[Suit["Heart"] = 2] = "Heart";
+    Suit[Suit["Club"] = 3] = "Club";
+})(exports.Suit || (exports.Suit = {}));
+var Suit = exports.Suit;
 
 },{}],166:[function(require,module,exports){
 var __extends = (this && this.__extends) || function (d, b) {
@@ -34554,7 +34561,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var parcel_1 = require("../libs/parcel");
-var route_1 = require('../constants/route');
+var enums_1 = require('../constants/enums');
 var MainContext = (function (_super) {
     __extends(MainContext, _super);
     function MainContext() {
@@ -34562,16 +34569,16 @@ var MainContext = (function (_super) {
     }
     MainContext.prototype.initialState = function () {
         return {
-            route: route_1.Route.Selector
+            route: enums_1.Route.Selector
         };
     };
     MainContext.prototype.listen = function (to) {
         var _this = this;
         to('route:game', function () {
-            _this.setState({ route: route_1.Route.Game });
+            _this.setState({ route: enums_1.Route.Game });
         });
         to('route:selector', function () {
-            _this.setState({ route: route_1.Route.Selector });
+            _this.setState({ route: enums_1.Route.Selector });
         });
     };
     MainContext.prototype.route = function (state) {
@@ -34590,7 +34597,7 @@ var MainContext = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MainContext;
 
-},{"../constants/route":165,"../libs/parcel":170}],169:[function(require,module,exports){
+},{"../constants/enums":165,"../libs/parcel":170}],169:[function(require,module,exports){
 var React = require('react');
 var ReactDOM = require('react-dom');
 var main_context_1 = require("./contexts/main-context");
@@ -34600,18 +34607,18 @@ var header_component_1 = require("./components/header-component");
 var footer_component_1 = require("./components/footer-component");
 var game_component_1 = require("./components/game-component");
 var game_selector_component_1 = require("./components/game-selector-component");
-var route_1 = require('./constants/route');
+var enums_1 = require('./constants/enums');
 var Starter = (function () {
     function Starter() {
     }
     Starter.run = function (dom) {
-        ReactDOM.render(React.createElement("article", {"className": "game-body"}, React.createElement(main_context_1.default, null, React.createElement(header_component_1.default, null), React.createElement(game_selector_context_1.default, {"route": route_1.Route.Selector}, React.createElement(game_selector_component_1.default, null)), React.createElement(game_context_1.default, {"route": route_1.Route.Game}, React.createElement(game_component_1.default, null)), React.createElement(footer_component_1.default, null))), dom);
+        ReactDOM.render(React.createElement("article", {"className": "game-body"}, React.createElement(main_context_1.default, null, React.createElement(header_component_1.default, null), React.createElement(game_selector_context_1.default, {"route": enums_1.Route.Selector}, React.createElement(game_selector_component_1.default, null)), React.createElement(game_context_1.default, {"route": enums_1.Route.Game}, React.createElement(game_component_1.default, null)), React.createElement(footer_component_1.default, null))), dom);
     };
     return Starter;
 })();
 window.Starter = Starter;
 
-},{"./components/footer-component":161,"./components/game-component":162,"./components/game-selector-component":163,"./components/header-component":164,"./constants/route":165,"./contexts/game-context":166,"./contexts/game-selector-context":167,"./contexts/main-context":168,"react":160,"react-dom":31}],170:[function(require,module,exports){
+},{"./components/footer-component":161,"./components/game-component":162,"./components/game-selector-component":163,"./components/header-component":164,"./constants/enums":165,"./contexts/game-context":166,"./contexts/game-selector-context":167,"./contexts/main-context":168,"react":160,"react-dom":31}],170:[function(require,module,exports){
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }

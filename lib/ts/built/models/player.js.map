@@ -1,0 +1,1 @@
+{"version":3,"file":"player.js","sourceRoot":"","sources":["../../models/player.ts"],"names":["Player","Player.constructor"],"mappings":"AAAA;IACEA,gBAAmBA,IAAgBA,EAASA,KAAqBA;QAArDC,oBAAuBA,GAAvBA,gBAAuBA;QAAEA,qBAA4BA,GAA5BA,aAA4BA;QAA9CA,SAAIA,GAAJA,IAAIA,CAAYA;QAASA,UAAKA,GAALA,KAAKA,CAAgBA;IAEjEA,CAACA;IACHD,aAACA;AAADA,CAACA,AAJD,IAIC;AAJD;wBAIC,CAAA"}
