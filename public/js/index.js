@@ -34408,6 +34408,7 @@ module.exports = validateDOMNesting;
 module.exports = require('./lib/React');
 
 },{"./lib/React":55}],161:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34424,11 +34425,12 @@ var FooterComponent = (function (_super) {
         return React.createElement("div", null, "footer");
     };
     return FooterComponent;
-})(parcel_1.Good);
+}(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = FooterComponent;
 
 },{"../libs/parcel":170,"react":160}],162:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34436,20 +34438,29 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var React = require("react");
+var card_module_1 = require("../mods/card-module");
 var GameComponent = (function (_super) {
     __extends(GameComponent, _super);
     function GameComponent() {
         _super.apply(this, arguments);
     }
+    GameComponent.prototype.writeCards = function () {
+        var _this = this;
+        var cards = this.props.cards;
+        return cards.map(function (card) {
+            return React.createElement(card_module_1.default, React.__spread({}, { card: card, onClick: function (card) { return _this.dispatch('choose:card', card); } }));
+        });
+    };
     GameComponent.prototype.render = function () {
-        return React.createElement("div", null, "game component");
+        return React.createElement("article", null, this.writeCards());
     };
     return GameComponent;
-})(parcel_1.Good);
+}(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameComponent;
 
-},{"../libs/parcel":170,"react":160}],163:[function(require,module,exports){
+},{"../libs/parcel":170,"../mods/card-module":174,"react":160}],163:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34464,14 +34475,15 @@ var GameSelectorComponent = (function (_super) {
     }
     GameSelectorComponent.prototype.render = function () {
         var _this = this;
-        return React.createElement("div", null, React.createElement("a", {"onClick": function () { return _this.dispatch('route:game'); }}, "game selector component"));
+        return React.createElement("div", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:game'); }}, "game selector component"));
     };
     return GameSelectorComponent;
-})(parcel_1.Good);
+}(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameSelectorComponent;
 
 },{"../libs/parcel":170,"react":160}],164:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34486,14 +34498,15 @@ var HeaderComponent = (function (_super) {
     }
     HeaderComponent.prototype.render = function () {
         var _this = this;
-        return React.createElement("header", {"className": "game-header"}, React.createElement("ul", null, React.createElement("li", null, React.createElement("a", {"onClick": function () { return _this.dispatch('route:selector'); }}, "Selector")), React.createElement("li", null, React.createElement("a", {"onClick": function () { return _this.dispatch('route:game'); }}, "Game"))));
+        return React.createElement("header", {className: "game-header"}, React.createElement("ul", null, React.createElement("li", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:selector'); }}, "Selector")), React.createElement("li", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:game'); }}, "Game"))));
     };
     return HeaderComponent;
-})(parcel_1.Good);
+}(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = HeaderComponent;
 
 },{"../libs/parcel":170,"react":160}],165:[function(require,module,exports){
+"use strict";
 (function (Route) {
     Route[Route["Selector"] = 0] = "Selector";
     Route[Route["Game"] = 1] = "Game";
@@ -34508,28 +34521,77 @@ var Route = exports.Route;
 var Suit = exports.Suit;
 
 },{}],166:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var parcel_1 = require("../libs/parcel");
+var card_engine_1 = require("../models/card-engine");
+var Turn;
+(function (Turn) {
+    Turn[Turn["Player"] = 0] = "Player";
+    Turn[Turn["Cpu"] = 1] = "Cpu";
+    Turn[Turn["Holding"] = 2] = "Holding";
+})(Turn || (Turn = {}));
 var GameContext = (function (_super) {
     __extends(GameContext, _super);
     function GameContext() {
         _super.apply(this, arguments);
     }
-    GameContext.prototype.initialState = function () {
-        return {};
+    GameContext.prototype.initialState = function (props) {
+        return {
+            player: props.engine.playerNow,
+            cards: props.engine.cards || [],
+            stepper: props.engine.start(),
+            turn: Turn.Player
+        };
+    };
+    GameContext.prototype.onChooseCard = function (card) {
+        var _this = this;
+        var state = this.state;
+        if (state.turn !== Turn.Player) {
+            return;
+        }
+        var now = this.state.stepper.step(card);
+        switch (now.state) {
+            case card_engine_1.CardState.ChooseOne:
+            case card_engine_1.CardState.OneMore:
+                state.stepper = now;
+                this.setState(state);
+                return;
+            case card_engine_1.CardState.Result:
+                state.stepper = now.step();
+                this.setState(state);
+                return;
+            case card_engine_1.CardState.Miss:
+                state.turn = Turn.Holding;
+                this.setState(state);
+                setTimeout(function () {
+                    state.stepper = now.step();
+                    state.turn = now.player.isCpu ? Turn.Cpu : Turn.Player;
+                    _this.setState(state);
+                }, 1000);
+                return;
+            case card_engine_1.CardState.Finish:
+                this.setState(state);
+                return;
+        }
     };
     GameContext.prototype.listen = function (to) {
+        var _this = this;
+        to('choose:card', function (card) {
+            _this.onChooseCard(card);
+        });
     };
     return GameContext;
-})(parcel_1.Parcel);
+}(parcel_1.Parcel));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameContext;
 
-},{"../libs/parcel":170}],167:[function(require,module,exports){
+},{"../libs/parcel":170,"../models/card-engine":171}],167:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34550,11 +34612,12 @@ var GameSelectorContext = (function (_super) {
         });
     };
     return GameSelectorContext;
-})(parcel_1.Parcel);
+}(parcel_1.Parcel));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameSelectorContext;
 
 },{"../libs/parcel":170}],168:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34562,6 +34625,9 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var constants_1 = require('../constants/constants');
+var card_engine_1 = require("../models/card-engine");
+var constants_2 = require("../constants/constants");
+var player_1 = require("../models/player");
 var MainContext = (function (_super) {
     __extends(MainContext, _super);
     function MainContext() {
@@ -34569,7 +34635,8 @@ var MainContext = (function (_super) {
     }
     MainContext.prototype.initialState = function () {
         return {
-            route: constants_1.Route.Selector
+            route: constants_1.Route.Game,
+            engine: new card_engine_1.default(5, [constants_2.Suit.Spade, constants_2.Suit.Dia], [new player_1.default('player')])
         };
     };
     MainContext.prototype.listen = function (to) {
@@ -34593,11 +34660,12 @@ var MainContext = (function (_super) {
         this.route(state);
     };
     return MainContext;
-})(parcel_1.Parcel);
+}(parcel_1.Parcel));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MainContext;
 
-},{"../constants/constants":165,"../libs/parcel":170}],169:[function(require,module,exports){
+},{"../constants/constants":165,"../libs/parcel":170,"../models/card-engine":171,"../models/player":173}],169:[function(require,module,exports){
+"use strict";
 var React = require('react');
 var ReactDOM = require('react-dom');
 var main_context_1 = require("./contexts/main-context");
@@ -34612,13 +34680,14 @@ var Starter = (function () {
     function Starter() {
     }
     Starter.run = function (dom) {
-        ReactDOM.render(React.createElement("article", {"className": "game-body"}, React.createElement(main_context_1.default, null, React.createElement(header_component_1.default, null), React.createElement(game_selector_context_1.default, {"route": constants_1.Route.Selector}, React.createElement(game_selector_component_1.default, null)), React.createElement(game_context_1.default, {"route": constants_1.Route.Game}, React.createElement(game_component_1.default, null)), React.createElement(footer_component_1.default, null))), dom);
+        ReactDOM.render(React.createElement("article", {className: "game-body"}, React.createElement(main_context_1.default, null, React.createElement(header_component_1.default, null), React.createElement(game_selector_context_1.default, {route: constants_1.Route.Selector}, React.createElement(game_selector_component_1.default, null)), React.createElement(game_context_1.default, {route: constants_1.Route.Game}, React.createElement(game_component_1.default, null)), React.createElement(footer_component_1.default, null))), dom);
     };
     return Starter;
-})();
+}());
 window.Starter = Starter;
 
 },{"./components/footer-component":161,"./components/game-component":162,"./components/game-selector-component":163,"./components/header-component":164,"./constants/constants":165,"./contexts/game-context":166,"./contexts/game-selector-context":167,"./contexts/main-context":168,"react":160,"react-dom":31}],170:[function(require,module,exports){
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -34641,7 +34710,7 @@ var Good = (function (_super) {
         var _a;
     };
     return Good;
-})(React.Component);
+}(React.Component));
 exports.Good = Good;
 var Parcel = (function (_super) {
     __extends(Parcel, _super);
@@ -34683,10 +34752,245 @@ var Parcel = (function (_super) {
     Parcel.prototype.render = function () {
         var props = _.assign({ emitter: this.emitter }, this.props, this.state);
         delete props.children;
-        return React.createElement("div", {"className": "context-wrapper"}, this.children.map(function (child, i) { return React.cloneElement(child, _.assign(props, { key: i })); }));
+        return React.createElement("div", {className: "context-wrapper"}, this.children.map(function (child, i) { return React.cloneElement(child, _.assign(props, { key: i })); }));
     };
     return Parcel;
-})(Good);
+}(Good));
 exports.Parcel = Parcel;
 
-},{"events":1,"lodash":29,"react":160}]},{},[169]);
+},{"events":1,"lodash":29,"react":160}],171:[function(require,module,exports){
+"use strict";
+var _ = require('lodash');
+var card_1 = require("./card");
+(function (CardState) {
+    CardState[CardState["ChooseOne"] = 0] = "ChooseOne";
+    CardState[CardState["OneMore"] = 1] = "OneMore";
+    CardState[CardState["Result"] = 2] = "Result";
+    CardState[CardState["Miss"] = 3] = "Miss";
+    CardState[CardState["Finish"] = 4] = "Finish";
+})(exports.CardState || (exports.CardState = {}));
+var CardState = exports.CardState;
+var CardEngine = (function () {
+    function CardEngine(eachSuitNumber, suits, players) {
+        this.eachSuitNumber = eachSuitNumber;
+        this.suits = suits;
+        this.players = players;
+        this.reset();
+    }
+    Object.defineProperty(CardEngine.prototype, "playerNow", {
+        get: function () {
+            return this.players[this.turnNumber];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    CardEngine.prototype.start = function () {
+        return CardStepper.start(this);
+    };
+    CardEngine.prototype.getCards = function (card, nextCard) {
+        this.rest -= 2;
+        this.gets[this.playerNow.name].push(card, nextCard);
+    };
+    CardEngine.prototype.generateGets = function (players) {
+        var gets = {};
+        players.forEach(function (player) {
+            gets[player.name] = [];
+        });
+        return gets;
+    };
+    CardEngine.prototype.generateCards = function (eachSuitNumber, suits) {
+        var cards = [];
+        suits.forEach(function (suit) {
+            _.times(eachSuitNumber, function (n) {
+                cards.push(new card_1.default(suit, n + 1));
+            });
+        });
+        return _.shuffle(cards);
+    };
+    CardEngine.prototype.isSame = function (card, nextCard) {
+        return card.number === nextCard.number;
+    };
+    Object.defineProperty(CardEngine.prototype, "isOver", {
+        get: function () {
+            return this.rest === 0;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    CardEngine.prototype.reset = function () {
+        var _a = this, eachSuitNumber = _a.eachSuitNumber, suits = _a.suits, players = _a.players;
+        this.cards = this.generateCards(eachSuitNumber, suits);
+        this.total = this.rest = this.cards.length;
+        this.gets = this.generateGets(players);
+        this.turnNumber = 0;
+    };
+    CardEngine.prototype.turnNext = function () {
+        this.turnNumber++;
+        if (this.turnNumber === this.players.length) {
+            this.turnNumber = 0;
+        }
+    };
+    return CardEngine;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = CardEngine;
+var CardStepper = (function () {
+    function CardStepper(params) {
+        var _this = this;
+        _.each(params, function (v, k) {
+            _this[k] = v;
+        });
+    }
+    CardStepper.prototype.clone = function (params) {
+        var _a = this, firstCard = _a.firstCard, secondCard = _a.secondCard, engine = _a.engine, state = _a.state, result = _a.result, player = _a.player;
+        return new CardStepper(_.assign({ firstCard: firstCard, secondCard: secondCard, engine: engine, state: state, result: result, player: player }, params));
+    };
+    CardStepper.start = function (engine) {
+        return new CardStepper({
+            state: CardState.ChooseOne,
+            engine: engine,
+            player: engine.playerNow
+        });
+    };
+    CardStepper.prototype.step0 = function () {
+        return this.clone({
+            state: CardState.ChooseOne,
+        });
+    };
+    CardStepper.prototype.step = function (card) {
+        switch (this.state) {
+            case CardState.ChooseOne:
+                return this.step1(card);
+            case CardState.OneMore:
+                return this.step2(card);
+            case CardState.Result:
+                return this.step0();
+            case CardState.Miss:
+                return this.reset();
+            default:
+                return this.step0();
+        }
+    };
+    CardStepper.prototype.step1 = function (card) {
+        if (card.isOpened) {
+            return this;
+        }
+        card.open();
+        this.firstCard = card;
+        return this.clone({
+            state: CardState.OneMore,
+        });
+    };
+    CardStepper.prototype.step2 = function (card) {
+        if (card.isOpened) {
+            return null;
+        }
+        card.open();
+        this.secondCard = card;
+        if (this.engine.isSame(this.firstCard, this.secondCard)) {
+            this.engine.getCards(this.firstCard, this.secondCard);
+            if (this.engine.isOver) {
+                return this.clone({
+                    state: CardState.Finish,
+                    result: true
+                });
+            }
+            return this.clone({
+                state: CardState.Result,
+                result: true
+            });
+        }
+        else {
+            return this.clone({
+                state: CardState.Miss,
+                result: false
+            });
+        }
+    };
+    CardStepper.prototype.reset = function () {
+        this.firstCard.close();
+        this.secondCard.close();
+        this.engine.turnNext();
+        return this.clone({
+            state: CardState.Result,
+            player: this.engine.playerNow
+        }).step();
+    };
+    return CardStepper;
+}());
+exports.CardStepper = CardStepper;
+
+},{"./card":172,"lodash":29}],172:[function(require,module,exports){
+"use strict";
+var Card = (function () {
+    function Card(suit, number, isOpened) {
+        if (isOpened === void 0) { isOpened = false; }
+        this.suit = suit;
+        this.number = number;
+        this.isOpened = isOpened;
+    }
+    Card.prototype.open = function () {
+        this.isOpened = true;
+    };
+    Card.prototype.close = function () {
+        this.isOpened = false;
+    };
+    return Card;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = Card;
+
+},{}],173:[function(require,module,exports){
+"use strict";
+var Player = (function () {
+    function Player(name, isCpu) {
+        if (name === void 0) { name = 'no name'; }
+        if (isCpu === void 0) { isCpu = false; }
+        this.name = name;
+        this.isCpu = isCpu;
+    }
+    return Player;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = Player;
+
+},{}],174:[function(require,module,exports){
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var parcel_1 = require("../libs/parcel");
+var React = require("react");
+var CardModule = (function (_super) {
+    __extends(CardModule, _super);
+    function CardModule() {
+        _super.apply(this, arguments);
+    }
+    Object.defineProperty(CardModule.prototype, "isOpened", {
+        get: function () {
+            return this.props.card.isOpened;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    CardModule.prototype.writeClass = function () {
+        return this.isOpened ? 'card opened' : 'card closed';
+    };
+    CardModule.prototype.write = function () {
+        if (!this.isOpened) {
+            return null;
+        }
+        return this.props.card.number;
+    };
+    CardModule.prototype.render = function () {
+        var _this = this;
+        return React.createElement("div", {className: this.writeClass(), onClick: function () { return _this.props.onClick(_this.props.card); }}, this.write());
+    };
+    return CardModule;
+}(parcel_1.Good));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = CardModule;
+
+},{"../libs/parcel":170,"react":160}]},{},[169]);

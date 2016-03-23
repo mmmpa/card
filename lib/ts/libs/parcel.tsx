@@ -4,8 +4,7 @@ import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 
 interface GoodProps {
-  emitter:EventEmitter,
-  children:any
+  emitter?:EventEmitter,
 }
 
 interface GoodState {
@@ -13,7 +12,7 @@ interface GoodState {
 }
 
 interface ParcelProps {
-  emitter:EventEmitter,
+  children?,
   route?
 }
 

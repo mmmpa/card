@@ -3,11 +3,15 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import {Route} from '../constants/constants'
+import CardEngine from "../models/card-engine";
+import {Suit} from "../constants/constants";
+import Player from "../models/player";
 
 export default class MainContext extends Parcel<{},{}>{
   initialState(){
     return {
-      route: Route.Selector
+      route: Route.Game,
+      engine: new CardEngine(5, [Suit.Spade, Suit.Dia], [new Player('player')])
     }
   }
 

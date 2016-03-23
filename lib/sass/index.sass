@@ -1,2 +1,25 @@
+$card-radius: 3px
+$card-margin: 3px
+$card-border: 1px solid #333
+$card-opened-bg: #fff
+$card-closed-bg: #ccc
+$card-masked-bg: #000
+
 body
   margin: 0
+
+.card
+  display: inline-block
+  vertical-align: middle
+  overflow: hidden
+  width: 50px
+  height: 90px
+  border-radius: $card-radius
+  margin: $card-margin $card-margin 0 0
+  border: $card-border
+  &.opened
+    background: $card-opened-bg
+  &.closed
+    background: $card-closed-bg
+  &.masked
+    background: $card-masked-bg
