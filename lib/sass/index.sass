@@ -4,12 +4,19 @@ $card-border: 1px solid #333
 $card-opened-bg: #fff
 $card-closed-bg: #ccc
 $card-masked-bg: #000
+$card-red: #e74c3c
+$card-black: #2c3e50
+$card-number-size: 20px
+$card-suit-size: 16px
 
 body
   margin: 0
 
 .card
+  position: relative
+  cursor: pointer
   display: inline-block
+  box-sizing: border-box
   vertical-align: middle
   overflow: hidden
   width: 50px
@@ -17,9 +24,56 @@ body
   border-radius: $card-radius
   margin: $card-margin $card-margin 0 0
   border: $card-border
-  &.opened
-    background: $card-opened-bg
+  font-weight: bold
+  text-align: center
+  line-height: 90px
+  font-size: $card-number-size
   &.closed
     background: $card-closed-bg
   &.masked
     background: $card-masked-bg
+  &.opened
+    background: $card-opened-bg
+    &.dia,
+    &.heart
+      color: $card-red
+    &.spade,
+    &.club
+      color: $card-black
+    &.dia:before,
+    &.heart:before,
+    &.spade:before,
+    &.club:before,
+    &.dia:after,
+    &.heart:after,
+    &.spade:after,
+    &.club:after
+      font-size: $card-suit-size
+      display: inline-block
+      position: absolute
+      line-height: 100%
+    &.dia:before,
+    &.heart:before,
+    &.spade:before,
+    &.club:before
+      top: 3px
+      left: 3px
+    &.dia:after,
+    &.heart:after,
+    &.spade:after,
+    &.club:after
+      bottom: 3px
+      right: 3px
+      transform: rotate(180deg)
+    &.dia:before,
+    &.dia:after
+      content: '♦'
+    &.heart:before,
+    &.heart:after
+      content: '♥'
+    &.spade:before,
+    &.spade:after
+      content: '♠'
+    &.club:before,
+    &.club:after
+      content: '♣'

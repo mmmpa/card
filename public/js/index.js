@@ -34439,11 +34439,24 @@ var __extends = (this && this.__extends) || function (d, b) {
 var parcel_1 = require("../libs/parcel");
 var React = require("react");
 var card_module_1 = require("../mods/card-module");
+var card_engine_1 = require("../models/card-engine");
+var result_module_1 = require("../mods/result-module");
 var GameComponent = (function (_super) {
     __extends(GameComponent, _super);
     function GameComponent() {
         _super.apply(this, arguments);
     }
+    GameComponent.prototype.writeResult = function () {
+        var _this = this;
+        if (this.props.state === card_engine_1.CardState.Finish) {
+            var result = this.props.result;
+            return React.createElement(result_module_1.default, React.__spread({}, {
+                result: result,
+                back: function () { return _this.dispatch('back'); },
+                retry: function () { return _this.dispatch('retry'); }
+            }));
+        }
+    };
     GameComponent.prototype.writeCards = function () {
         var _this = this;
         var cards = this.props.cards;
@@ -34452,14 +34465,14 @@ var GameComponent = (function (_super) {
         });
     };
     GameComponent.prototype.render = function () {
-        return React.createElement("article", null, this.writeCards());
+        return React.createElement("article", null, this.writeResult(), this.writeCards());
     };
     return GameComponent;
 }(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameComponent;
 
-},{"../libs/parcel":170,"../mods/card-module":174,"react":160}],163:[function(require,module,exports){
+},{"../libs/parcel":170,"../models/card-engine":171,"../mods/card-module":175,"../mods/result-module":176,"react":160}],163:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -34529,6 +34542,8 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var card_engine_1 = require("../models/card-engine");
+var card_engine_2 = require("../models/card-engine");
+var cpu_1 = require("../models/cpu");
 var Turn;
 (function (Turn) {
     Turn[Turn["Player"] = 0] = "Player";
@@ -34541,42 +34556,82 @@ var GameContext = (function (_super) {
         _super.apply(this, arguments);
     }
     GameContext.prototype.initialState = function (props) {
-        return {
-            player: props.engine.playerNow,
-            cards: props.engine.cards || [],
-            stepper: props.engine.start(),
-            turn: Turn.Player
-        };
+        return this.initialGameState;
     };
-    GameContext.prototype.onChooseCard = function (card) {
+    GameContext.prototype.retry = function () {
+        this.setState(this.initialGameState);
+    };
+    Object.defineProperty(GameContext.prototype, "initialGameState", {
+        get: function () {
+            var _a = this.props.recipe, eachSuitNumber = _a.eachSuitNumber, suits = _a.suits, players = _a.players;
+            var engine = new card_engine_1.default(eachSuitNumber, suits, players);
+            var stepper = engine.start();
+            var cpus = _.reduce(players, function (a, player) {
+                if (player.isCpu) {
+                    a[player.name] = cpu_1.default.detect(player.name, engine);
+                }
+                return a;
+            }, {});
+            return {
+                cpus: cpus,
+                stepper: stepper,
+                player: engine.playerNow,
+                state: stepper.state,
+                cards: engine.cards,
+                turn: stepper.player.isCpu ? Turn.Cpu : Turn.Player
+            };
+        },
+        enumerable: true,
+        configurable: true
+    });
+    GameContext.prototype.componentDidMount = function () {
+        _super.prototype.componentDidMount.call(this);
+        this.runCpu();
+    };
+    GameContext.prototype.componentDidUpdate = function () {
+        this.runCpu();
+    };
+    GameContext.prototype.runCpu = function () {
+        var _this = this;
+        if (this.state.turn === Turn.Cpu && this.state.stepper.state === card_engine_2.CardState.ChooseOne) {
+            this.state.cpus[this.state.player.name].run(function (card) { return _this.choose(card); });
+        }
+    };
+    GameContext.prototype.choose = function (card) {
         var _this = this;
         var state = this.state;
-        if (state.turn !== Turn.Player) {
-            return;
-        }
-        var now = this.state.stepper.step(card);
-        switch (now.state) {
-            case card_engine_1.CardState.ChooseOne:
-            case card_engine_1.CardState.OneMore:
-                state.stepper = now;
+        var nestStepper = this.state.stepper.step(card);
+        state.state = nestStepper.state;
+        switch (nestStepper.state) {
+            case card_engine_2.CardState.ChooseOne:
+            case card_engine_2.CardState.OneMore:
+                state.stepper = nestStepper;
                 this.setState(state);
                 return;
-            case card_engine_1.CardState.Result:
-                state.stepper = now.step();
+            case card_engine_2.CardState.Result:
+                state.stepper = nestStepper.step();
                 this.setState(state);
                 return;
-            case card_engine_1.CardState.Miss:
+            case card_engine_2.CardState.Miss:
                 state.turn = Turn.Holding;
                 this.setState(state);
                 setTimeout(function () {
-                    state.stepper = now.step();
-                    state.turn = now.player.isCpu ? Turn.Cpu : Turn.Player;
+                    state.stepper = nestStepper.step();
+                    state.player = state.stepper.player;
+                    state.turn = state.stepper.player.isCpu ? Turn.Cpu : Turn.Player;
                     _this.setState(state);
                 }, 1000);
                 return;
-            case card_engine_1.CardState.Finish:
+            case card_engine_2.CardState.Finish:
+                state.turn = Turn.Holding;
+                state.result = nestStepper.result;
                 this.setState(state);
                 return;
+        }
+    };
+    GameContext.prototype.onChooseCard = function (card) {
+        if (this.state.turn === Turn.Player) {
+            this.choose(card);
         }
     };
     GameContext.prototype.listen = function (to) {
@@ -34584,13 +34639,19 @@ var GameContext = (function (_super) {
         to('choose:card', function (card) {
             _this.onChooseCard(card);
         });
+        to('retry', function (card) {
+            _this.retry();
+        });
+        to('back', function (card) {
+            //this.onChooseCard(card);
+        });
     };
     return GameContext;
 }(parcel_1.Parcel));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameContext;
 
-},{"../libs/parcel":170,"../models/card-engine":171}],167:[function(require,module,exports){
+},{"../libs/parcel":170,"../models/card-engine":171,"../models/cpu":173}],167:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -34625,8 +34686,6 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var constants_1 = require('../constants/constants');
-var card_engine_1 = require("../models/card-engine");
-var constants_2 = require("../constants/constants");
 var player_1 = require("../models/player");
 var MainContext = (function (_super) {
     __extends(MainContext, _super);
@@ -34636,7 +34695,11 @@ var MainContext = (function (_super) {
     MainContext.prototype.initialState = function () {
         return {
             route: constants_1.Route.Game,
-            engine: new card_engine_1.default(5, [constants_2.Suit.Spade, constants_2.Suit.Dia], [new player_1.default('player')])
+            recipe: {
+                eachSuitNumber: 5,
+                suits: [constants_1.Suit.Spade, constants_1.Suit.Dia, constants_1.Suit.Club, constants_1.Suit.Heart],
+                players: [new player_1.default('CPU1', true), new player_1.default('CPU2', true)]
+            }
         };
     };
     MainContext.prototype.listen = function (to) {
@@ -34664,7 +34727,7 @@ var MainContext = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MainContext;
 
-},{"../constants/constants":165,"../libs/parcel":170,"../models/card-engine":171,"../models/player":173}],169:[function(require,module,exports){
+},{"../constants/constants":165,"../libs/parcel":170,"../models/player":174}],169:[function(require,module,exports){
 "use strict";
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -34770,6 +34833,15 @@ var card_1 = require("./card");
     CardState[CardState["Finish"] = 4] = "Finish";
 })(exports.CardState || (exports.CardState = {}));
 var CardState = exports.CardState;
+var ResultData = (function () {
+    function ResultData(time, count, total) {
+        this.time = time;
+        this.count = count;
+        this.total = total;
+    }
+    return ResultData;
+}());
+exports.ResultData = ResultData;
 var CardEngine = (function () {
     function CardEngine(eachSuitNumber, suits, players) {
         this.eachSuitNumber = eachSuitNumber;
@@ -34789,12 +34861,12 @@ var CardEngine = (function () {
     };
     CardEngine.prototype.getCards = function (card, nextCard) {
         this.rest -= 2;
-        this.gets[this.playerNow.name].push(card, nextCard);
+        this.gets[this.playerNow.name] += 2;
     };
     CardEngine.prototype.generateGets = function (players) {
         var gets = {};
         players.forEach(function (player) {
-            gets[player.name] = [];
+            gets[player.name] = 0;
         });
         return gets;
     };
@@ -34823,12 +34895,25 @@ var CardEngine = (function () {
         this.total = this.rest = this.cards.length;
         this.gets = this.generateGets(players);
         this.turnNumber = 0;
+        this.history = [];
     };
     CardEngine.prototype.turnNext = function () {
         this.turnNumber++;
         if (this.turnNumber === this.players.length) {
             this.turnNumber = 0;
         }
+    };
+    CardEngine.prototype.open = function (card) {
+        if (card.isOpened) {
+            return false;
+        }
+        card.open();
+        _.remove(this.history, card);
+        this.history.push(card);
+        return true;
+    };
+    CardEngine.prototype.close = function (card) {
+        card.close();
     };
     return CardEngine;
 }());
@@ -34842,8 +34927,8 @@ var CardStepper = (function () {
         });
     }
     CardStepper.prototype.clone = function (params) {
-        var _a = this, firstCard = _a.firstCard, secondCard = _a.secondCard, engine = _a.engine, state = _a.state, result = _a.result, player = _a.player;
-        return new CardStepper(_.assign({ firstCard: firstCard, secondCard: secondCard, engine: engine, state: state, result: result, player: player }, params));
+        var _a = this, firstCard = _a.firstCard, secondCard = _a.secondCard, engine = _a.engine, state = _a.state, player = _a.player;
+        return new CardStepper(_.assign({ firstCard: firstCard, secondCard: secondCard, engine: engine, state: state, player: player }, params));
     };
     CardStepper.start = function (engine) {
         return new CardStepper({
@@ -34872,38 +34957,37 @@ var CardStepper = (function () {
         }
     };
     CardStepper.prototype.step1 = function (card) {
-        if (card.isOpened) {
+        if (!this.engine.open(card)) {
             return this;
         }
-        card.open();
         this.firstCard = card;
         return this.clone({
             state: CardState.OneMore,
         });
     };
     CardStepper.prototype.step2 = function (card) {
-        if (card.isOpened) {
-            return null;
+        if (!this.engine.open(card)) {
+            return this;
         }
-        card.open();
         this.secondCard = card;
         if (this.engine.isSame(this.firstCard, this.secondCard)) {
             this.engine.getCards(this.firstCard, this.secondCard);
             if (this.engine.isOver) {
                 return this.clone({
                     state: CardState.Finish,
-                    result: true
+                    player: this.engine.playerNow,
+                    result: new ResultData(0, this.engine.gets, this.engine.total)
                 });
             }
             return this.clone({
                 state: CardState.Result,
-                result: true
+                got: true
             });
         }
         else {
             return this.clone({
                 state: CardState.Miss,
-                result: false
+                got: false
             });
         }
     };
@@ -34942,6 +35026,118 @@ exports.default = Card;
 
 },{}],173:[function(require,module,exports){
 "use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var _ = require('lodash');
+var Cpu = (function () {
+    function Cpu() {
+    }
+    Cpu.detect = function (name, engine) {
+        switch (name) {
+            case 'CPU2':
+                return new StrongCpu(engine);
+            default:
+                return new RandomCpu(engine);
+        }
+    };
+    return Cpu;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = Cpu;
+var BaseCpu = (function () {
+    function BaseCpu(engine) {
+        this.engine = engine;
+    }
+    BaseCpu.prototype.run = function (callback) {
+        var _this = this;
+        this.prepare();
+        this.timer(function () { return callback(_this.choose(0)); }, function () { return callback(_this.choose(1)); });
+    };
+    BaseCpu.prototype.timer = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i - 0] = arguments[_i];
+        }
+        var step = function (f) {
+            if (!f) {
+                return;
+            }
+            setTimeout(function () {
+                f();
+                step(args.shift());
+            }, 1000);
+        };
+        step(args.shift());
+    };
+    return BaseCpu;
+}());
+var RandomCpu = (function (_super) {
+    __extends(RandomCpu, _super);
+    function RandomCpu() {
+        _super.apply(this, arguments);
+    }
+    RandomCpu.prototype.prepare = function () {
+    };
+    RandomCpu.prototype.choose = function (n) {
+        var list = _.filter(this.engine.cards, function (card) { return !card.isOpened; });
+        var chosen = _.sample(list);
+        return chosen;
+    };
+    return RandomCpu;
+}(BaseCpu));
+var StrongCpu = (function (_super) {
+    __extends(StrongCpu, _super);
+    function StrongCpu() {
+        _super.apply(this, arguments);
+    }
+    StrongCpu.prototype.prepare = function () {
+        var history = _.filter(this.engine.history, function (card) { return !card.isOpened; });
+        var last1 = history.pop();
+        if (last1) {
+            var first = _.find(history, function (card) { return card.number === last1.number; });
+            if (first) {
+                this.cards = [first, last1];
+                return void (0);
+            }
+            history.push(last1);
+        }
+        var last2 = history.pop();
+        if (last2) {
+            var second = _.find(history, function (card) { return card.number === last2.number; });
+            if (second) {
+                this.cards = [second, last2];
+                return void (0);
+            }
+            history.push(last2);
+        }
+        var notOpened = _.filter(this.engine.cards, function (card) { return !card.isOpened; });
+        var notYetOpened = _.filter(notOpened, function (card) { return !_.includes(history, card) && card !== last1 && card !== last2; });
+        var list = notYetOpened.length === 0 ? notOpened : notYetOpened;
+        var chosen = _.sample(list);
+        var third = _.find(history, function (card) { return card !== chosen && card.number === chosen.number; });
+        if (third) {
+            this.cards = [chosen, third];
+            return;
+        }
+        var rest = _.filter(list, function (card) { return card !== chosen; });
+        this.cards = [chosen, _.sample(rest)];
+        return void (0);
+    };
+    StrongCpu.prototype.choose = function (n) {
+        return this.cards[n];
+    };
+    StrongCpu.prototype.random = function () {
+        var list = _.filter(this.engine.cards, function (card) { return !card.isOpened; });
+        return _.sample(list);
+    };
+    return StrongCpu;
+}(BaseCpu));
+
+},{"lodash":29}],174:[function(require,module,exports){
+"use strict";
 var Player = (function () {
     function Player(name, isCpu) {
         if (name === void 0) { name = 'no name'; }
@@ -34954,15 +35150,15 @@ var Player = (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Player;
 
-},{}],174:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var parcel_1 = require("../libs/parcel");
 var React = require("react");
+var constants_1 = require('../constants/constants');
 var CardModule = (function (_super) {
     __extends(CardModule, _super);
     function CardModule() {
@@ -34975,8 +35171,21 @@ var CardModule = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    CardModule.prototype.suitClass = function () {
+        switch (this.props.card.suit) {
+            case constants_1.Suit.Spade:
+                return 'spade';
+            case constants_1.Suit.Dia:
+                return 'dia';
+            case constants_1.Suit.Club:
+                return 'club';
+            case constants_1.Suit.Heart:
+                return 'heart';
+        }
+    };
     CardModule.prototype.writeClass = function () {
-        return this.isOpened ? 'card opened' : 'card closed';
+        var base = this.isOpened ? 'card opened ' : 'card closed ';
+        return base + this.suitClass();
     };
     CardModule.prototype.write = function () {
         if (!this.isOpened) {
@@ -34986,11 +35195,41 @@ var CardModule = (function (_super) {
     };
     CardModule.prototype.render = function () {
         var _this = this;
-        return React.createElement("div", {className: this.writeClass(), onClick: function () { return _this.props.onClick(_this.props.card); }}, this.write());
+        return React.createElement("div", {className: this.writeClass(), onMouseDown: function () { return _this.props.onClick(_this.props.card); }}, this.write());
     };
     return CardModule;
-}(parcel_1.Good));
+}(React.Component));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = CardModule;
 
-},{"../libs/parcel":170,"react":160}]},{},[169]);
+},{"../constants/constants":165,"react":160}],176:[function(require,module,exports){
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var React = require("react");
+var ResultModule = (function (_super) {
+    __extends(ResultModule, _super);
+    function ResultModule() {
+        _super.apply(this, arguments);
+    }
+    ResultModule.prototype.render = function () {
+        var _this = this;
+        console.log(this.props.result);
+        var _a = this.props.result, time = _a.time, count = _a.count, total = _a.total;
+        var win = _.reduce(count, function (a, v, k) {
+            if (a.count < v) {
+                return { name: k, count: v };
+            }
+            return a;
+        }, { name: null, count: 0 });
+        return React.createElement("div", {className: "result"}, React.createElement("h1", null, "result"), React.createElement("h2", null, win.name + "\u306E\u52DD\u3061"), React.createElement("h2", null, time, "秒"), React.createElement("h2", null, win.count + "/" + total), React.createElement("button", {onClick: function (e) { _this.props.retry(e); }}, "retry"), React.createElement("button", {onClick: function (e) { _this.props.back(e); }}, "back"));
+    };
+    return ResultModule;
+}(React.Component));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ResultModule;
+
+},{"react":160}]},{},[169]);

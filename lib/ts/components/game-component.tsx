@@ -3,12 +3,28 @@ import * as React from "react";
 import * as ReactDOM from 'react-dom';
 import CardModule from "../mods/card-module";
 import Card from "../models/card";
+import {CardStepper, CardState} from "../models/card-engine";
+import ResultModule from "../mods/result-module";
+import {ResultData} from "../models/card-engine";
 
 interface P {
-  cards:Card[]
+  cards:Card[],
+  state:CardState,
+  result:ResultData
 }
 
 export default class GameComponent extends Good<P,{}> {
+
+  writeResult() {
+    if (this.props.state === CardState.Finish) {
+      let {result} = this.props;
+      return <ResultModule {...{
+        result,
+        back: ()=> this.dispatch('back'),
+        retry: ()=> this.dispatch('retry')
+      }}/>
+    }
+  }
 
   writeCards() {
     let {cards} = this.props;
@@ -19,6 +35,7 @@ export default class GameComponent extends Good<P,{}> {
 
   render() {
     return <article>
+      {this.writeResult()}
       {this.writeCards()}
     </article>
   }

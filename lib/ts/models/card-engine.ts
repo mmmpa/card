@@ -12,11 +12,18 @@ export enum CardState{
   Finish
 }
 
+export class ResultData {
+  constructor(public time:number, public count:any, public total:number) {
+
+  }
+}
+
 export default class CardEngine {
   public total:number;
   public rest:number;
   public cards:Card[];
-  private gets:any;
+  public gets:any;
+  public history:Card[];
   private turnNumber:number;
 
   constructor(public eachSuitNumber:number, public suits:Suit[], public players:Player[]) {
@@ -33,13 +40,13 @@ export default class CardEngine {
 
   getCards(card, nextCard) {
     this.rest -= 2;
-    this.gets[this.playerNow.name].push(card, nextCard);
+    this.gets[this.playerNow.name] += 2;
   }
 
   generateGets(players:Player[]) {
     let gets = {};
     players.forEach((player)=> {
-      gets[player.name] = [];
+      gets[player.name] = 0;
     });
 
     return gets;
@@ -60,7 +67,7 @@ export default class CardEngine {
     return card.number === nextCard.number
   }
 
-  get isOver(){
+  get isOver() {
     return this.rest === 0;
   }
 
@@ -71,6 +78,7 @@ export default class CardEngine {
     this.total = this.rest = this.cards.length;
     this.gets = this.generateGets(players);
     this.turnNumber = 0;
+    this.history = [];
   }
 
   turnNext() {
@@ -78,6 +86,20 @@ export default class CardEngine {
     if (this.turnNumber === this.players.length) {
       this.turnNumber = 0;
     }
+  }
+
+  open(card:Card):boolean {
+    if (card.isOpened) {
+      return false;
+    }
+    card.open();
+    _.remove(this.history, card);
+    this.history.push(card);
+    return true;
+  }
+
+  close(card:Card) {
+    card.close();
   }
 }
 
@@ -87,8 +109,10 @@ export class CardStepper {
 
   engine:CardEngine;
   state:CardState;
-  result:boolean;
   player:Player;
+  got:boolean;
+
+  result:ResultData;
 
   constructor(params) {
     _.each(params, (v, k)=> {
@@ -97,8 +121,8 @@ export class CardStepper {
   }
 
   clone(params) {
-    let {firstCard, secondCard, engine, state, result, player} = this;
-    return new CardStepper(_.assign({firstCard, secondCard, engine, state, result, player}, params));
+    let {firstCard, secondCard, engine, state, player} = this;
+    return new CardStepper(_.assign({firstCard, secondCard, engine, state, player}, params));
   }
 
   static start(engine):CardStepper {
@@ -131,11 +155,10 @@ export class CardStepper {
   }
 
   step1(card):CardStepper {
-    if (card.isOpened) {
+    if (!this.engine.open(card)) {
       return this;
     }
 
-    card.open();
     this.firstCard = card;
 
     return this.clone({
@@ -144,11 +167,10 @@ export class CardStepper {
   }
 
   step2(card):CardStepper {
-    if (card.isOpened) {
-      return null;
+    if (!this.engine.open(card)) {
+      return this;
     }
 
-    card.open();
     this.secondCard = card;
 
     if (this.engine.isSame(this.firstCard, this.secondCard)) {
@@ -156,17 +178,18 @@ export class CardStepper {
       if (this.engine.isOver) {
         return this.clone({
           state: CardState.Finish,
-          result: true
+          player: this.engine.playerNow,
+          result: new ResultData(0, this.engine.gets, this.engine.total)
         });
       }
       return this.clone({
         state: CardState.Result,
-        result: true
+        got: true
       });
     } else {
       return this.clone({
         state: CardState.Miss,
-        result: false
+        got: false
       });
     }
   }
