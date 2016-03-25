@@ -34472,7 +34472,7 @@ var GameComponent = (function (_super) {
         });
     };
     GameComponent.prototype.render = function () {
-        return React.createElement("article", null, this.writeResult(), React.createElement("section", {className: "card-table"}, this.writeCards()));
+        return React.createElement("article", {className: "game-field"}, this.writeResult(), React.createElement("section", {className: "card-table"}, this.writeCards()));
     };
     return GameComponent;
 }(parcel_1.Good));
@@ -34581,6 +34581,7 @@ var GameContext = (function (_super) {
     __extends(GameContext, _super);
     function GameContext() {
         _super.apply(this, arguments);
+        this.timerStore = [];
     }
     GameContext.prototype.initialState = function (props) {
         return this.initialGameState;
@@ -34620,6 +34621,10 @@ var GameContext = (function (_super) {
         this.runCpu(state, this.state);
         this.sendMessage(state, this.state);
     };
+    GameContext.prototype.componentWillUnmount = function () {
+        _super.prototype.componentWillUnmount.call(this);
+        this.timerStore.forEach(function (id) { return clearTimeout(id); });
+    };
     GameContext.prototype.sendMessage = function (nextState, state) {
         if (!state || nextState.stepper.player !== state.stepper.player) {
             this.dispatch('message:right', nextState.stepper.player.name + "\u306E\u30BF\u30FC\u30F3\u3067\u3059");
@@ -34632,7 +34637,7 @@ var GameContext = (function (_super) {
                 && nextState.state === card_engine_2.CardState.ChooseOne
                 && nextState.turn === Turn.Cpu) {
             setTimeout(function () {
-                nextState.cpus[nextState.player.name].run(function (card) { return _this.choose(card); });
+                nextState.cpus[nextState.player.name].run(_this.timerStore, function (card) { return _this.choose(card); });
             }, 1);
         }
     };
@@ -34678,11 +34683,11 @@ var GameContext = (function (_super) {
         to('choose:card', function (card) {
             _this.onChooseCard(card);
         });
-        to('retry', function (card) {
+        to('retry', function () {
             _this.retry();
         });
-        to('back', function (card) {
-            //this.onChooseCard(card);
+        to('back', function () {
+            _this.dispatch('route:selector');
         });
     };
     return GameContext;
@@ -34722,7 +34727,7 @@ var GameSelectorContext = (function (_super) {
         }
     };
     GameSelectorContext.prototype.recipe = function (firstName, secondName) {
-        var eachSuitNumber = 13;
+        var eachSuitNumber = 1;
         var suits = [constants_1.Suit.Spade, constants_1.Suit.Dia, constants_1.Suit.Club, constants_1.Suit.Heart];
         var first = this.generatePlayer(firstName);
         var second = this.generatePlayer(secondName);
@@ -34751,14 +34756,21 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var constants_1 = require('../constants/constants');
+var player_1 = require("../models/player");
+var card_engine_1 = require("../models/card-engine");
 var MainContext = (function (_super) {
     __extends(MainContext, _super);
     function MainContext() {
         _super.apply(this, arguments);
     }
     MainContext.prototype.initialState = function () {
+        return { route: constants_1.Route.Selector };
+    };
+    MainContext.prototype.testState = function () {
         return {
-            route: constants_1.Route.Selector
+            route: constants_1.Route.Game,
+            recipe: { eachSuitNumber: 2, suits: [constants_1.Suit.Spade, constants_1.Suit.Dia], players: [new player_1.default()] },
+            result: new card_engine_1.ResultData(10, {}, 10)
         };
     };
     MainContext.prototype.listen = function (to) {
@@ -34792,7 +34804,7 @@ var MainContext = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MainContext;
 
-},{"../constants/constants":165,"../libs/parcel":170}],169:[function(require,module,exports){
+},{"../constants/constants":165,"../libs/parcel":170,"../models/card-engine":171,"../models/player":174}],169:[function(require,module,exports){
 "use strict";
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -35163,24 +35175,26 @@ var BaseCpu = (function () {
     function BaseCpu(engine) {
         this.engine = engine;
     }
-    BaseCpu.prototype.run = function (callback) {
+    BaseCpu.prototype.run = function (timerStore, callback) {
         var _this = this;
         this.prepare();
-        this.timer(function () { return callback(_this.choose(0)); }, function () { return callback(_this.choose(1)); });
+        this.timer(timerStore, function () { return callback(_this.choose(0)); }, function () { return callback(_this.choose(1)); });
     };
-    BaseCpu.prototype.timer = function () {
+    BaseCpu.prototype.timer = function (timerStore) {
         var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
         }
         var step = function (f) {
             if (!f) {
                 return;
             }
-            setTimeout(function () {
+            var id = setTimeout(function () {
                 f();
                 step(args.shift());
+                _.remove(timerStore, id);
             }, 1000);
+            timerStore.push(id);
         };
         step(args.shift());
     };
@@ -35395,6 +35409,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var React = require("react");
+var fa_1 = require("../mods/fa");
 var ResultModule = (function (_super) {
     __extends(ResultModule, _super);
     function ResultModule() {
@@ -35402,7 +35417,6 @@ var ResultModule = (function (_super) {
     }
     ResultModule.prototype.render = function () {
         var _this = this;
-        console.log(this.props.result);
         var _a = this.props.result, time = _a.time, count = _a.count, total = _a.total;
         var win = _.reduce(count, function (a, v, k) {
             if (a.count < v) {
@@ -35410,11 +35424,11 @@ var ResultModule = (function (_super) {
             }
             return a;
         }, { name: null, count: 0 });
-        return React.createElement("div", {className: "result"}, React.createElement("h1", null, "result"), React.createElement("h2", null, win.name + "\u306E\u52DD\u3061"), React.createElement("h2", null, time, "秒"), React.createElement("h2", null, win.count + "/" + total), React.createElement("button", {onClick: function (e) { _this.props.retry(e); }}, "retry"), React.createElement("button", {onClick: function (e) { _this.props.back(e); }}, "back"));
+        return React.createElement("div", {className: "game-result"}, React.createElement("div", {className: "container"}, React.createElement("section", null, React.createElement("h1", null, "試合結果"), React.createElement("h2", null, win.name + "\u306E\u52DD\u3061"), React.createElement("h2", null, win.count + "/" + total), React.createElement("button", {className: "one-more", onClick: function (e) { _this.props.retry(e); }}, React.createElement(fa_1.default, {icon: "refresh"}), "もう一回"), React.createElement("button", {className: "selector", onClick: function (e) { _this.props.back(e); }}, "選択画面", React.createElement(fa_1.default, {icon: "arrow-circle-right"})))));
     };
     return ResultModule;
 }(React.Component));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = ResultModule;
 
-},{"react":160}]},{},[169]);
+},{"../mods/fa":176,"react":160}]},{},[169]);

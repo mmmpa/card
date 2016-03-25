@@ -42,6 +42,17 @@ a
   font-weight: bold
   cursor: pointer
 
+button
+  background: $link-color
+  color: #fff
+  padding: 10px 20px
+  font-size: $title-font-size
+  border: 0
+  margin: 20px 0
+  border-radius: $card-radius
+  cursor: pointer
+  box-shadow: 0 4px 4px #ccc
+
 .game-body
   width: $card-area-width
   margin: 0 auto
@@ -79,6 +90,33 @@ a
   .right-message
     float: right
 
+.game-field
+  position: relative
+
+.game-result
+  z-index: 10000
+  position: absolute
+  top: 0
+  left: 0
+  background: rgba(0, 0, 0, 0.3)
+  .container
+    display: table-cell
+    vertical-align: middle
+    text-align: center
+    width: $card-area-width
+    height: $card-area-height
+  section
+    display: inline-block
+    background: #fff
+    border-radius: $game-radius
+    padding: 20px 10px
+    h1
+      font-size: $title-font-size
+    h2
+      font-size: $title-font-size * 1.5
+    button
+      margin: 0 10px
+
 .game-player
   display: table-cell
   vertical-align: middle
@@ -104,16 +142,7 @@ a
       padding: 10px $side-padding
       border: 0
       border-bottom: 2px solid $link-color
-  button
-    background: $link-color
-    color: #fff
-    padding: 10px 20px
-    font-size: $title-font-size
-    border: 0
-    margin: 20px 0
-    border-radius: $card-radius
-    cursor: pointer
-    box-shadow: 0 4px 4px #ccc
+
 .card-table
   padding: 0 0 $card-margin $card-margin
   background: $card-area-background

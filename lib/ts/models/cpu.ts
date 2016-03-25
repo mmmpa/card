@@ -22,20 +22,23 @@ abstract class BaseCpu {
 
   abstract prepare():void
 
-  run(callback:(card:Card)=>void) {
+  run(timerStore:number[], callback:(card:Card)=>void) {
     this.prepare();
-    this.timer(()=>callback(this.choose(0)), ()=>callback(this.choose(1)));
+    this.timer(timerStore, ()=>callback(this.choose(0)), ()=>callback(this.choose(1)));
   }
 
-  timer(...args:Function[]) {
+  timer(timerStore, ...args:Function[]) {
     let step = (f) => {
       if (!f) {
         return;
       }
-      setTimeout(()=> {
+      let id = setTimeout(()=> {
         f();
         step(args.shift());
-      }, 1000)
+        _.remove(timerStore, id);
+      }, 1000);
+
+      timerStore.push(id);
     };
 
     step(args.shift())

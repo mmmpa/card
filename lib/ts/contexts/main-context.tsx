@@ -4,11 +4,18 @@ import * as ReactDOM from 'react-dom';
 
 import {Route, Suit} from '../constants/constants'
 import Player from "../models/player";
+import {ResultData} from "../models/card-engine";
 
 export default class MainContext extends Parcel<{},{}> {
   initialState() {
+    return {route: Route.Selector}
+  }
+
+  testState() {
     return {
-      route: Route.Selector
+      route: Route.Game,
+      recipe: {eachSuitNumber: 2, suits: [Suit.Spade, Suit.Dia], players: [new Player()]},
+      result: new ResultData(10, {}, 10)
     }
   }
 

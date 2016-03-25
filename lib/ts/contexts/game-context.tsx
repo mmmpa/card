@@ -36,6 +36,8 @@ enum Turn{
 }
 
 export default class GameContext extends Parcel<P,S> {
+  timerStore:number[] = [];
+
   initialState(props) {
     return this.initialGameState;
   }
@@ -66,7 +68,7 @@ export default class GameContext extends Parcel<P,S> {
   }
 
   componentDidMount() {
-    super.componentDidMount()
+    super.componentDidMount();
     this.runCpu(this.state);
     this.sendMessage(this.state);
   }
@@ -74,6 +76,11 @@ export default class GameContext extends Parcel<P,S> {
   componentWillUpdate(_, state) {
     this.runCpu(state, this.state);
     this.sendMessage(state, this.state);
+  }
+
+  componentWillUnmount(){
+    super.componentWillUnmount();
+    this.timerStore.forEach((id)=> clearTimeout(id));
   }
 
   sendMessage(nextState, state?) {
@@ -88,7 +95,7 @@ export default class GameContext extends Parcel<P,S> {
       && nextState.state === CardState.ChooseOne
       && nextState.turn === Turn.Cpu) {
       setTimeout(()=> {
-        nextState.cpus[nextState.player.name].run((card)=> this.choose(card));
+        nextState.cpus[nextState.player.name].run(this.timerStore, (card)=> this.choose(card));
       }, 1);
     }
   }
@@ -137,12 +144,12 @@ export default class GameContext extends Parcel<P,S> {
       this.onChooseCard(card);
     });
 
-    to('retry', (card:Card)=> {
+    to('retry', ()=> {
       this.retry();
     });
 
-    to('back', (card:Card)=> {
-      //this.onChooseCard(card);
+    to('back', ()=> {
+      this.dispatch('route:selector');
     });
   }
 }

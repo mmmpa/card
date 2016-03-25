@@ -33,7 +33,7 @@ export default class GameComponent extends Good<P,{}> {
   }
 
   render() {
-    return <article>
+    return <article className="game-field">
       {this.writeResult()}
       <section className="card-table">
         {this.writeCards()}
