@@ -4,8 +4,9 @@ import * as _ from 'lodash';
 
 export default class Cpu {
   static detect(name, engine) {
-    switch (name) {
-      case 'CPU2':
+    switch (true) {
+      case name.indexOf('つよい') !== -1:
+        console.log('つよい')
         return new StrongCpu(engine);
       default:
         return new RandomCpu(engine);

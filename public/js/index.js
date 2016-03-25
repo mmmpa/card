@@ -34418,11 +34418,18 @@ var parcel_1 = require("../libs/parcel");
 var React = require("react");
 var FooterComponent = (function (_super) {
     __extends(FooterComponent, _super);
-    function FooterComponent() {
-        _super.apply(this, arguments);
+    function FooterComponent(props) {
+        _super.call(this, props);
+        this.state = {
+            leftMessage: '',
+            rightMessage: '',
+            leftMessageDisplayed: '',
+            rightMessageDisplayed: ''
+        };
     }
     FooterComponent.prototype.render = function () {
-        return React.createElement("div", null, "footer");
+        var _a = this.props, leftMessage = _a.leftMessage, rightMessage = _a.rightMessage;
+        return React.createElement("footer", {className: "game-footer"}, React.createElement("div", {className: "left-message"}, leftMessage), React.createElement("div", {className: "right-message"}, rightMessage));
     };
     return FooterComponent;
 }(parcel_1.Good));
@@ -34460,19 +34467,19 @@ var GameComponent = (function (_super) {
     GameComponent.prototype.writeCards = function () {
         var _this = this;
         var cards = this.props.cards;
-        return cards.map(function (card) {
-            return React.createElement(card_module_1.default, React.__spread({}, { card: card, onClick: function (card) { return _this.dispatch('choose:card', card); } }));
+        return cards.map(function (card, key) {
+            return React.createElement(card_module_1.default, React.__spread({}, { key: key, card: card, onClick: function (card) { return _this.dispatch('choose:card', card); } }));
         });
     };
     GameComponent.prototype.render = function () {
-        return React.createElement("article", null, this.writeResult(), this.writeCards());
+        return React.createElement("article", null, this.writeResult(), React.createElement("section", {className: "card-table"}, this.writeCards()));
     };
     return GameComponent;
 }(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameComponent;
 
-},{"../libs/parcel":170,"../models/card-engine":171,"../mods/card-module":175,"../mods/result-module":176,"react":160}],163:[function(require,module,exports){
+},{"../libs/parcel":170,"../models/card-engine":171,"../mods/card-module":175,"../mods/result-module":178,"react":160}],163:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -34481,21 +34488,40 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var React = require("react");
+var fa_1 = require("../mods/fa");
+var plain_select_1 = require("../mods/plain-select");
 var GameSelectorComponent = (function (_super) {
     __extends(GameSelectorComponent, _super);
     function GameSelectorComponent() {
         _super.apply(this, arguments);
     }
+    GameSelectorComponent.prototype.componentWillMount = function () {
+        _super.prototype.componentWillMount.call(this);
+        this.setState({
+            first: this.props.players[2],
+            second: this.props.players[2]
+        });
+    };
     GameSelectorComponent.prototype.render = function () {
         var _this = this;
-        return React.createElement("div", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:game'); }}, "game selector component"));
+        var players = this.props.players;
+        var _a = this.state, first = _a.first, second = _a.second;
+        return React.createElement("article", {className: "game-player"}, React.createElement("section", {className: "selector"}, React.createElement("div", {className: "first"}, React.createElement("h1", null, "先手"), React.createElement(plain_select_1.default, React.__spread({}, {
+            values: players,
+            selected: first,
+            onChange: function (first) { return _this.setState({ first: first }); }
+        }))), React.createElement("div", {className: "second"}, React.createElement("h1", null, "後手"), React.createElement(plain_select_1.default, React.__spread({}, {
+            values: players,
+            selected: second,
+            onChange: function (second) { return _this.setState({ second: second }); }
+        }))), React.createElement("div", {className: "start"}, React.createElement("button", {onClick: function () { return _this.dispatch('select', first, second); }}, React.createElement(fa_1.default, {icon: "paw"}), "対戦開始"))));
     };
     return GameSelectorComponent;
 }(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameSelectorComponent;
 
-},{"../libs/parcel":170,"react":160}],164:[function(require,module,exports){
+},{"../libs/parcel":170,"../mods/fa":176,"../mods/plain-select":177,"react":160}],164:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -34504,6 +34530,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var React = require("react");
+var fa_1 = require("../mods/fa");
 var HeaderComponent = (function (_super) {
     __extends(HeaderComponent, _super);
     function HeaderComponent() {
@@ -34511,14 +34538,14 @@ var HeaderComponent = (function (_super) {
     }
     HeaderComponent.prototype.render = function () {
         var _this = this;
-        return React.createElement("header", {className: "game-header"}, React.createElement("ul", null, React.createElement("li", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:selector'); }}, "Selector")), React.createElement("li", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:game'); }}, "Game"))));
+        return React.createElement("header", {className: "game-header"}, React.createElement("h1", null, "ふつうの神経衰弱"), React.createElement("ul", null, React.createElement("li", null, React.createElement("a", {onClick: function () { return _this.dispatch('route:selector'); }}, "ゲーム選択画面"), React.createElement(fa_1.default, {icon: "arrow-circle-right"}))));
     };
     return HeaderComponent;
 }(parcel_1.Good));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = HeaderComponent;
 
-},{"../libs/parcel":170,"react":160}],165:[function(require,module,exports){
+},{"../libs/parcel":170,"../mods/fa":176,"react":160}],165:[function(require,module,exports){
 "use strict";
 (function (Route) {
     Route[Route["Selector"] = 0] = "Selector";
@@ -34586,46 +34613,58 @@ var GameContext = (function (_super) {
     });
     GameContext.prototype.componentDidMount = function () {
         _super.prototype.componentDidMount.call(this);
-        this.runCpu();
+        this.runCpu(this.state);
+        this.sendMessage(this.state);
     };
-    GameContext.prototype.componentDidUpdate = function () {
-        this.runCpu();
+    GameContext.prototype.componentWillUpdate = function (_, state) {
+        this.runCpu(state, this.state);
+        this.sendMessage(state, this.state);
     };
-    GameContext.prototype.runCpu = function () {
+    GameContext.prototype.sendMessage = function (nextState, state) {
+        if (!state || nextState.stepper.player !== state.stepper.player) {
+            this.dispatch('message:right', nextState.stepper.player.name + "\u306E\u30BF\u30FC\u30F3\u3067\u3059");
+        }
+    };
+    GameContext.prototype.runCpu = function (nextState, state) {
         var _this = this;
-        if (this.state.turn === Turn.Cpu && this.state.stepper.state === card_engine_2.CardState.ChooseOne) {
-            this.state.cpus[this.state.player.name].run(function (card) { return _this.choose(card); });
+        if (!state
+            || state.state !== nextState.state
+                && nextState.state === card_engine_2.CardState.ChooseOne
+                && nextState.turn === Turn.Cpu) {
+            setTimeout(function () {
+                nextState.cpus[nextState.player.name].run(function (card) { return _this.choose(card); });
+            }, 1);
         }
     };
     GameContext.prototype.choose = function (card) {
         var _this = this;
-        var state = this.state;
-        var nestStepper = this.state.stepper.step(card);
-        state.state = nestStepper.state;
-        switch (nestStepper.state) {
+        var stepper = this.state.stepper.step(card);
+        var state = stepper.state;
+        switch (state) {
             case card_engine_2.CardState.ChooseOne:
             case card_engine_2.CardState.OneMore:
-                state.stepper = nestStepper;
-                this.setState(state);
+                this.setState({ state: state, stepper: stepper });
                 return;
             case card_engine_2.CardState.Result:
-                state.stepper = nestStepper.step();
-                this.setState(state);
+                stepper = stepper.step();
+                state = stepper.state;
+                this.setState({ state: state, stepper: stepper });
                 return;
             case card_engine_2.CardState.Miss:
-                state.turn = Turn.Holding;
-                this.setState(state);
+                var turn = Turn.Holding;
+                this.setState({ state: state, turn: turn });
                 setTimeout(function () {
-                    state.stepper = nestStepper.step();
-                    state.player = state.stepper.player;
-                    state.turn = state.stepper.player.isCpu ? Turn.Cpu : Turn.Player;
-                    _this.setState(state);
+                    stepper = stepper.step();
+                    state = stepper.state;
+                    var player = stepper.player;
+                    var turn = player.isCpu ? Turn.Cpu : Turn.Player;
+                    _this.setState({ state: state, stepper: stepper, player: player, turn: turn });
                 }, 1000);
                 return;
             case card_engine_2.CardState.Finish:
-                state.turn = Turn.Holding;
-                state.result = nestStepper.result;
-                this.setState(state);
+                var turn = Turn.Holding;
+                var result = stepper.result;
+                this.setState({ state: state, turn: turn, result: result });
                 return;
         }
     };
@@ -34659,17 +34698,43 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var parcel_1 = require("../libs/parcel");
+var constants_1 = require("../constants/constants");
+var player_1 = require("../models/player");
 var GameSelectorContext = (function (_super) {
     __extends(GameSelectorContext, _super);
     function GameSelectorContext() {
         _super.apply(this, arguments);
     }
     GameSelectorContext.prototype.initialState = function () {
-        return {};
+        return {
+            players: ['あなた', 'ふつうのCPU', 'つよいCPU']
+        };
+    };
+    GameSelectorContext.prototype.activate = function () {
+        this.dispatch('message:right', 'ゲームを選択してください');
+    };
+    GameSelectorContext.prototype.generatePlayer = function (name) {
+        switch (true) {
+            case name.indexOf('CPU') !== -1:
+                return new player_1.default(name, true);
+            default:
+                return new player_1.default(name);
+        }
+    };
+    GameSelectorContext.prototype.recipe = function (firstName, secondName) {
+        var eachSuitNumber = 13;
+        var suits = [constants_1.Suit.Spade, constants_1.Suit.Dia, constants_1.Suit.Club, constants_1.Suit.Heart];
+        var first = this.generatePlayer(firstName);
+        var second = this.generatePlayer(secondName);
+        if (firstName === secondName) {
+            second.name += '2';
+        }
+        return { eachSuitNumber: eachSuitNumber, suits: suits, players: [first, second] };
     };
     GameSelectorContext.prototype.listen = function (to) {
-        to('route:game', function () {
-            console.log('click');
+        var _this = this;
+        to('select', function (first, second) {
+            _this.dispatch('start:game', _this.recipe(first, second));
         });
     };
     return GameSelectorContext;
@@ -34677,7 +34742,7 @@ var GameSelectorContext = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GameSelectorContext;
 
-},{"../libs/parcel":170}],168:[function(require,module,exports){
+},{"../constants/constants":165,"../libs/parcel":170,"../models/player":174}],168:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -34686,7 +34751,6 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var parcel_1 = require("../libs/parcel");
 var constants_1 = require('../constants/constants');
-var player_1 = require("../models/player");
 var MainContext = (function (_super) {
     __extends(MainContext, _super);
     function MainContext() {
@@ -34694,21 +34758,22 @@ var MainContext = (function (_super) {
     }
     MainContext.prototype.initialState = function () {
         return {
-            route: constants_1.Route.Game,
-            recipe: {
-                eachSuitNumber: 5,
-                suits: [constants_1.Suit.Spade, constants_1.Suit.Dia, constants_1.Suit.Club, constants_1.Suit.Heart],
-                players: [new player_1.default('CPU1', true), new player_1.default('CPU2', true)]
-            }
+            route: constants_1.Route.Selector
         };
     };
     MainContext.prototype.listen = function (to) {
         var _this = this;
-        to('route:game', function () {
-            _this.setState({ route: constants_1.Route.Game });
+        to('start:game', function (recipe) {
+            _this.setState({ route: constants_1.Route.Game, recipe: recipe });
         });
         to('route:selector', function () {
             _this.setState({ route: constants_1.Route.Selector });
+        });
+        to('message:right', function (rightMessage) {
+            _this.setState({ rightMessage: rightMessage });
+        });
+        to('message:left', function (leftMessage) {
+            _this.setState({ leftMessage: leftMessage });
         });
     };
     MainContext.prototype.route = function (state) {
@@ -34716,7 +34781,7 @@ var MainContext = (function (_super) {
             return _.isUndefined(child.props.route) || child.props.route == state.route;
         });
     };
-    MainContext.prototype.componentWillMount = function () {
+    MainContext.prototype.activate = function () {
         this.route(this.state);
     };
     MainContext.prototype.componentWillUpdate = function (props, state) {
@@ -34727,7 +34792,7 @@ var MainContext = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MainContext;
 
-},{"../constants/constants":165,"../libs/parcel":170,"../models/player":174}],169:[function(require,module,exports){
+},{"../constants/constants":165,"../libs/parcel":170}],169:[function(require,module,exports){
 "use strict";
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -34772,6 +34837,51 @@ var Good = (function (_super) {
         return (_a = this.props.emitter).emit.apply(_a, [event].concat(args));
         var _a;
     };
+    Good.prototype.activate = function () {
+    };
+    Good.prototype.deactivate = function () {
+    };
+    Object.defineProperty(Good.prototype, "myName", {
+        get: function () {
+            if (this._myName) {
+                return this._myName;
+            }
+            return this._myName = this.constructor.toString().match(/function[ ]+([a-zA-Z0-9_]+)/)[1];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Good.prototype.debug = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i - 0] = arguments[_i];
+        }
+        console.log.apply(console, [this.myName].concat(args));
+    };
+    Good.prototype.componentWillMount = function () {
+        this.debug('componentWillMount');
+        this.activate();
+    };
+    Good.prototype.componentDidMount = function () {
+        this.debug('componentDidMount');
+    };
+    Good.prototype.componentWillReceiveProps = function (nextProps) {
+        //this.debug('componentWillReceiveProps');
+    };
+    Good.prototype.shouldComponentUpdate = function (nextProps, nextState) {
+        //this.debug('shouldComponentUpdate');
+        return true;
+    };
+    Good.prototype.componentWillUpdate = function (nextProps, nextState) {
+        //this.debug('componentWillUpdate');
+    };
+    Good.prototype.componentDidUpdate = function (prevProps, prevState) {
+        //this.debug('componentDidUpdate');
+    };
+    Good.prototype.componentWillUnmount = function () {
+        //this.debug('componentWillUnmount');
+        this.deactivate();
+    };
     return Good;
 }(React.Component));
 exports.Good = Good;
@@ -34792,14 +34902,15 @@ var Parcel = (function (_super) {
             _this.emitter.removeListener(eventName, callback);
             return eventName;
         });
-        //console.log({removed})
+        _super.prototype.componentWillUnmount.call(this);
     };
-    Parcel.prototype.componentDidMount = function () {
+    Parcel.prototype.componentWillMount = function () {
         var _this = this;
         this.listen(function (eventName, callback) {
             _this.addedOnStore.push({ eventName: eventName, callback: callback });
             _this.emitter.on(eventName, callback);
         });
+        _super.prototype.componentWillMount.call(this);
     };
     Object.defineProperty(Parcel.prototype, "children", {
         get: function () {
@@ -34815,7 +34926,7 @@ var Parcel = (function (_super) {
     Parcel.prototype.render = function () {
         var props = _.assign({ emitter: this.emitter }, this.props, this.state);
         delete props.children;
-        return React.createElement("div", {className: "context-wrapper"}, this.children.map(function (child, i) { return React.cloneElement(child, _.assign(props, { key: i })); }));
+        return React.createElement("div", {className: "context-wrapper"}, this.children.map(function (child, key) { return React.cloneElement(child, _.assign(props, { key: key })); }));
     };
     return Parcel;
 }(Good));
@@ -35036,8 +35147,9 @@ var Cpu = (function () {
     function Cpu() {
     }
     Cpu.detect = function (name, engine) {
-        switch (name) {
-            case 'CPU2':
+        switch (true) {
+            case name.indexOf('つよい') !== -1:
+                console.log('つよい');
                 return new StrongCpu(engine);
             default:
                 return new RandomCpu(engine);
@@ -35171,6 +35283,13 @@ var CardModule = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(CardModule.prototype, "number", {
+        get: function () {
+            return this.props.card.number;
+        },
+        enumerable: true,
+        configurable: true
+    });
     CardModule.prototype.suitClass = function () {
         switch (this.props.card.suit) {
             case constants_1.Suit.Spade:
@@ -35189,9 +35308,20 @@ var CardModule = (function (_super) {
     };
     CardModule.prototype.write = function () {
         if (!this.isOpened) {
-            return null;
+            return '';
         }
-        return this.props.card.number;
+        switch (this.number) {
+            case 1:
+                return 'A';
+            case 11:
+                return 'J';
+            case 12:
+                return 'Q';
+            case 13:
+                return 'K';
+            default:
+                return this.number + '';
+        }
     };
     CardModule.prototype.render = function () {
         var _this = this;
@@ -35203,6 +35333,61 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = CardModule;
 
 },{"../constants/constants":165,"react":160}],176:[function(require,module,exports){
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var React = require('react');
+var Fa = (function (_super) {
+    __extends(Fa, _super);
+    function Fa() {
+        _super.apply(this, arguments);
+    }
+    Fa.prototype.render = function () {
+        var p = this.props;
+        var classes = ['fa'];
+        classes.push("fa-" + p.icon);
+        p.scale && classes.push("fa-" + p.scale + "x");
+        (p.fixedWidth === undefined || p.fixedWidth === true) && classes.push('fa-fw');
+        p.list && classes.push('fa-li');
+        p.border && classes.push('fa-border');
+        p.pull && classes.push("fa-pull-" + p.pull);
+        p.animation && classes.push("fa-" + p.animation);
+        p.rotate && classes.push("fa-rotate-" + p.rotate);
+        p.flip && classes.push("fa-flip-" + p.flip);
+        return React.createElement("i", {className: classes.join(' ')});
+    };
+    return Fa;
+}(React.Component));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = Fa;
+
+},{"react":160}],177:[function(require,module,exports){
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var React = require('react');
+var parcel_1 = require("../libs/parcel");
+var PlainSelect = (function (_super) {
+    __extends(PlainSelect, _super);
+    function PlainSelect() {
+        _super.apply(this, arguments);
+    }
+    PlainSelect.prototype.render = function () {
+        var _a = this.props, onChange = _a.onChange, values = _a.values, selected = _a.selected;
+        return React.createElement("select", {value: selected, onChange: function (e) { return onChange(e.target.value); }}, values.map(function (value, key) { return React.createElement("option", React.__spread({}, { value: value, key: key }), value); }));
+    };
+    return PlainSelect;
+}(parcel_1.Good));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = PlainSelect;
+
+},{"../libs/parcel":170,"react":160}],178:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];

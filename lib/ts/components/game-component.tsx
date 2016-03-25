@@ -14,7 +14,6 @@ interface P {
 }
 
 export default class GameComponent extends Good<P,{}> {
-
   writeResult() {
     if (this.props.state === CardState.Finish) {
       let {result} = this.props;
@@ -28,15 +27,17 @@ export default class GameComponent extends Good<P,{}> {
 
   writeCards() {
     let {cards} = this.props;
-    return cards.map((card)=> {
-      return <CardModule {...{card, onClick: (card)=> this.dispatch('choose:card', card)}}/>
+    return cards.map((card, key)=> {
+      return <CardModule {...{key, card, onClick: (card)=> this.dispatch('choose:card', card)}}/>
     });
   }
 
   render() {
     return <article>
       {this.writeResult()}
-      {this.writeCards()}
+      <section className="card-table">
+        {this.writeCards()}
+      </section>
     </article>
   }
 }

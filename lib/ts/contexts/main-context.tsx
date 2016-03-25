@@ -8,22 +8,25 @@ import Player from "../models/player";
 export default class MainContext extends Parcel<{},{}> {
   initialState() {
     return {
-      route: Route.Game,
-      recipe: {
-        eachSuitNumber: 5,
-        suits: [Suit.Spade, Suit.Dia, Suit.Club, Suit.Heart],
-        players: [new Player('CPU1', true), new Player('CPU2', true)]
-      }
+      route: Route.Selector
     }
   }
 
   listen(to) {
-    to('route:game', ()=> {
-      this.setState({route: Route.Game});
+    to('start:game', (recipe)=> {
+      this.setState({route: Route.Game, recipe});
     });
 
     to('route:selector', ()=> {
       this.setState({route: Route.Selector});
+    });
+
+    to('message:right', (rightMessage)=> {
+      this.setState({rightMessage});
+    });
+
+    to('message:left', (leftMessage)=> {
+      this.setState({leftMessage});
     });
   }
 
@@ -33,7 +36,7 @@ export default class MainContext extends Parcel<{},{}> {
     });
   }
 
-  componentWillMount() {
+  activate() {
     this.route(this.state)
   }
 

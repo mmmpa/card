@@ -3,22 +3,22 @@ import * as ReactDOM from 'react-dom';
 import Card from "../models/card";
 import {Suit} from '../constants/constants'
 
-interface P{
+interface P {
   card:Card,
   onClick:Function
 }
 
-interface S{
-
-}
-
 export default class CardModule extends React.Component<P,{}> {
-  get isOpened(){
+  get isOpened() {
     return this.props.card.isOpened
   }
 
-  suitClass(){
-    switch(this.props.card.suit){
+  get number(){
+    return this.props.card.number
+  }
+
+  suitClass() {
+    switch (this.props.card.suit) {
       case Suit.Spade:
         return 'spade';
       case Suit.Dia:
@@ -30,17 +30,28 @@ export default class CardModule extends React.Component<P,{}> {
     }
   }
 
-  writeClass():string{
-    let base = this.isOpened ? 'card opened ' : 'card closed '
+  writeClass():string {
+    let base = this.isOpened ? 'card opened ' : 'card closed ';
     return base + this.suitClass()
   }
 
-  write(){
-    if(!this.isOpened){
-      return null;
+  write():string {
+    if (!this.isOpened) {
+      return '';
     }
 
-    return this.props.card.number;
+    switch (this.number) {
+      case 1:
+        return 'A';
+      case 11:
+        return 'J';
+      case 12:
+        return 'Q';
+      case 13:
+        return 'K';
+      default:
+        return this.number+''
+    }
   }
 
   render() {

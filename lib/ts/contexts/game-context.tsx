@@ -65,50 +65,63 @@ export default class GameContext extends Parcel<P,S> {
     };
   }
 
-  componentDidMount(){
-    super.componentDidMount();
-    this.runCpu();
+  componentDidMount() {
+    super.componentDidMount()
+    this.runCpu(this.state);
+    this.sendMessage(this.state);
   }
 
-  componentDidUpdate() {
-    this.runCpu();
+  componentWillUpdate(_, state) {
+    this.runCpu(state, this.state);
+    this.sendMessage(state, this.state);
   }
 
-  runCpu(){
-    if (this.state.turn === Turn.Cpu && this.state.stepper.state === CardState.ChooseOne) {
-      this.state.cpus[this.state.player.name].run((card)=> this.choose(card));
+  sendMessage(nextState, state?) {
+    if (!state || nextState.stepper.player !== state.stepper.player) {
+      this.dispatch('message:right', `${nextState.stepper.player.name}のターンです`)
+    }
+  }
+
+  runCpu(nextState, state?) {
+    if (!state
+      || state.state !== nextState.state
+      && nextState.state === CardState.ChooseOne
+      && nextState.turn === Turn.Cpu) {
+      setTimeout(()=> {
+        nextState.cpus[nextState.player.name].run((card)=> this.choose(card));
+      }, 1);
     }
   }
 
   choose(card) {
-    let {state} = this;
-    let nestStepper:CardStepper = this.state.stepper.step(card);
-    state.state = nestStepper.state;
+    let stepper:CardStepper = this.state.stepper.step(card);
+    let state = stepper.state;
 
-    switch (nestStepper.state) {
+    switch (state) {
       case CardState.ChooseOne:
       case CardState.OneMore:
-        state.stepper = nestStepper;
-        this.setState(state);
+        this.setState({state, stepper});
         return;
       case CardState.Result:
-        state.stepper = nestStepper.step();
-        this.setState(state);
+        stepper = stepper.step();
+        state = stepper.state;
+        this.setState({state, stepper});
         return;
       case CardState.Miss:
-        state.turn = Turn.Holding;
-        this.setState(state);
+        let turn = Turn.Holding;
+        this.setState({state, turn});
         setTimeout(()=> {
-          state.stepper = nestStepper.step();
-          state.player = state.stepper.player;
-          state.turn = state.stepper.player.isCpu ? Turn.Cpu : Turn.Player;
-          this.setState(state);
+          stepper = stepper.step();
+          state = stepper.state;
+          let player = stepper.player;
+          let turn = player.isCpu ? Turn.Cpu : Turn.Player;
+          this.setState({state, stepper, player, turn});
         }, 1000);
         return;
       case CardState.Finish:
-        state.turn = Turn.Holding;
-        state.result = nestStepper.result;
-        this.setState(state);
+        let turn = Turn.Holding;
+        let result = stepper.result;
+        this.setState({state, turn, result});
         return;
     }
   }

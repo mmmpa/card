@@ -28,6 +28,57 @@ export abstract class Good<P, S> extends React.Component<P & GoodProps, S & Good
   dispatch(event:string, ...args:any[]):boolean {
     return this.props.emitter.emit(event, ...args);
   }
+
+  activate(){
+
+  }
+
+  deactivate(){
+
+  }
+
+  private _myName:string;
+  get myName(){
+    if(this._myName){
+      return this._myName;
+    }
+    return this._myName = this.constructor.toString().match(/function[ ]+([a-zA-Z0-9_]+)/)[1]
+  }
+
+  debug(...args){
+    console.log(this.myName, ...args)
+  }
+
+  componentWillMount() {
+    this.debug('componentWillMount');
+    this.activate();
+  }
+
+  componentDidMount() {
+    this.debug('componentDidMount');
+  }
+
+  componentWillReceiveProps(nextProps){
+    //this.debug('componentWillReceiveProps');
+  }
+
+  shouldComponentUpdate(nextProps, nextState):boolean{
+    //this.debug('shouldComponentUpdate');
+    return true
+  }
+
+  componentWillUpdate(nextProps, nextState):void{
+    //this.debug('componentWillUpdate');
+  }
+
+  componentDidUpdate(prevProps, prevState):void{
+    //this.debug('componentDidUpdate');
+  }
+
+  componentWillUnmount() {
+    //this.debug('componentWillUnmount');
+    this.deactivate();
+  }
 }
 
 export abstract class Parcel<P, S> extends Good<P & ParcelProps, S & ParcelState> {
@@ -39,19 +90,21 @@ export abstract class Parcel<P, S> extends Good<P & ParcelProps, S & ParcelState
 
   abstract initialState(props):any;
 
+
   componentWillUnmount() {
     let removed = this.addedOnStore.map(({eventName, callback}:EventStore)=> {
       this.emitter.removeListener(eventName, callback);
       return eventName;
     });
-    //console.log({removed})
+    super.componentWillUnmount();
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.listen((eventName:string, callback:Function) => {
       this.addedOnStore.push({eventName, callback});
       this.emitter.on(eventName, callback);
     });
+    super.componentWillMount();
   }
 
   constructor(props) {
@@ -76,7 +129,7 @@ export abstract class Parcel<P, S> extends Good<P & ParcelProps, S & ParcelState
     delete props.children;
 
     return <div className="context-wrapper">
-      {this.children.map((child, i)=> React.cloneElement(child, _.assign(props, {key: i})))}
+      {this.children.map((child, key)=> React.cloneElement(child, _.assign(props, {key})))}
     </div>;
   }
 }
