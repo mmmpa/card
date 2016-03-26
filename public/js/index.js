@@ -34498,8 +34498,8 @@ var GameSelectorComponent = (function (_super) {
     GameSelectorComponent.prototype.componentWillMount = function () {
         _super.prototype.componentWillMount.call(this);
         this.setState({
-            first: this.props.players[2],
-            second: this.props.players[2]
+            first: this.props.players[0],
+            second: this.props.players[1]
         });
     };
     GameSelectorComponent.prototype.render = function () {
@@ -34727,7 +34727,7 @@ var GameSelectorContext = (function (_super) {
         }
     };
     GameSelectorContext.prototype.recipe = function (firstName, secondName) {
-        var eachSuitNumber = 1;
+        var eachSuitNumber = 13;
         var suits = [constants_1.Suit.Spade, constants_1.Suit.Dia, constants_1.Suit.Club, constants_1.Suit.Heart];
         var first = this.generatePlayer(firstName);
         var second = this.generatePlayer(secondName);

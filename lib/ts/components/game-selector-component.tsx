@@ -18,8 +18,8 @@ export default class GameSelectorComponent extends Good<P,S> {
   componentWillMount() {
     super.componentWillMount()
     this.setState({
-      first: this.props.players[2],
-      second: this.props.players[2]
+      first: this.props.players[0],
+      second: this.props.players[1]
     })
   }
 

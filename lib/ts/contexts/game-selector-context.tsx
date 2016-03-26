@@ -29,7 +29,7 @@ export default class GameSelectorContext extends Parcel<{},{}> {
   }
 
   recipe(firstName, secondName) {
-    let eachSuitNumber = 1;
+    let eachSuitNumber = 13;
     let suits = [Suit.Spade, Suit.Dia, Suit.Club, Suit.Heart]
 
     let first = this.generatePlayer(firstName);
