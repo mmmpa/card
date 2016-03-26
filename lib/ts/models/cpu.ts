@@ -6,7 +6,6 @@ export default class Cpu {
   static detect(name, engine) {
     switch (true) {
       case name.indexOf('つよい') !== -1:
-        console.log('つよい')
         return new StrongCpu(engine);
       default:
         return new RandomCpu(engine);

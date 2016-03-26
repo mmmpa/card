@@ -27,8 +27,8 @@ export default class GameSelectorComponent extends Good<P,S> {
     let {players} = this.props;
     let {first, second} = this.state;
     return <article className="game-player">
-      <section className="selector">
-        <div className="first">
+      <section className="game-selector">
+        <div className="game-first">
           <h1>先手</h1>
           <PlainSelect {...{
             values: players,
@@ -36,7 +36,7 @@ export default class GameSelectorComponent extends Good<P,S> {
             onChange: (first)=> this.setState({first})
           }}/>
         </div>
-        <div className="second">
+        <div className="game-second">
           <h1>後手</h1>
           <PlainSelect {...{
             values: players,
@@ -44,7 +44,7 @@ export default class GameSelectorComponent extends Good<P,S> {
             onChange: (second)=> this.setState({second})
           }}/>
         </div>
-        <div className="start">
+        <div className="game-start">
           <button onClick={()=> this.dispatch('select', first, second)}>
             <Fa icon="paw"/>
             対戦開始

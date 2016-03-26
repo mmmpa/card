@@ -26,7 +26,7 @@ export default class ResultModule extends React.Component<P,{}> {
     }, {name: null, count: 0}) as {name:string, count:number};
 
     return <div className="game-result">
-      <div className="container">
+      <div className="game-container">
         <section>
           <h1>試合結果</h1>
           <h2>{`${win.name}の勝ち`}</h2>

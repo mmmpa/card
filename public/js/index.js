@@ -34506,15 +34506,15 @@ var GameSelectorComponent = (function (_super) {
         var _this = this;
         var players = this.props.players;
         var _a = this.state, first = _a.first, second = _a.second;
-        return React.createElement("article", {className: "game-player"}, React.createElement("section", {className: "selector"}, React.createElement("div", {className: "first"}, React.createElement("h1", null, "先手"), React.createElement(plain_select_1.default, React.__spread({}, {
+        return React.createElement("article", {className: "game-player"}, React.createElement("section", {className: "game-selector"}, React.createElement("div", {className: "game-first"}, React.createElement("h1", null, "先手"), React.createElement(plain_select_1.default, React.__spread({}, {
             values: players,
             selected: first,
             onChange: function (first) { return _this.setState({ first: first }); }
-        }))), React.createElement("div", {className: "second"}, React.createElement("h1", null, "後手"), React.createElement(plain_select_1.default, React.__spread({}, {
+        }))), React.createElement("div", {className: "game-second"}, React.createElement("h1", null, "後手"), React.createElement(plain_select_1.default, React.__spread({}, {
             values: players,
             selected: second,
             onChange: function (second) { return _this.setState({ second: second }); }
-        }))), React.createElement("div", {className: "start"}, React.createElement("button", {onClick: function () { return _this.dispatch('select', first, second); }}, React.createElement(fa_1.default, {icon: "paw"}), "対戦開始"))));
+        }))), React.createElement("div", {className: "game-start"}, React.createElement("button", {onClick: function () { return _this.dispatch('select', first, second); }}, React.createElement(fa_1.default, {icon: "paw"}), "対戦開始"))));
     };
     return GameSelectorComponent;
 }(parcel_1.Good));
@@ -35161,7 +35161,6 @@ var Cpu = (function () {
     Cpu.detect = function (name, engine) {
         switch (true) {
             case name.indexOf('つよい') !== -1:
-                console.log('つよい');
                 return new StrongCpu(engine);
             default:
                 return new RandomCpu(engine);
@@ -35424,7 +35423,7 @@ var ResultModule = (function (_super) {
             }
             return a;
         }, { name: null, count: 0 });
-        return React.createElement("div", {className: "game-result"}, React.createElement("div", {className: "container"}, React.createElement("section", null, React.createElement("h1", null, "試合結果"), React.createElement("h2", null, win.name + "\u306E\u52DD\u3061"), React.createElement("h2", null, win.count + "/" + total), React.createElement("button", {className: "one-more", onClick: function (e) { _this.props.retry(e); }}, React.createElement(fa_1.default, {icon: "refresh"}), "もう一回"), React.createElement("button", {className: "selector", onClick: function (e) { _this.props.back(e); }}, "選択画面", React.createElement(fa_1.default, {icon: "arrow-circle-right"})))));
+        return React.createElement("div", {className: "game-result"}, React.createElement("div", {className: "game-container"}, React.createElement("section", null, React.createElement("h1", null, "試合結果"), React.createElement("h2", null, win.name + "\u306E\u52DD\u3061"), React.createElement("h2", null, win.count + "/" + total), React.createElement("button", {className: "one-more", onClick: function (e) { _this.props.retry(e); }}, React.createElement(fa_1.default, {icon: "refresh"}), "もう一回"), React.createElement("button", {className: "selector", onClick: function (e) { _this.props.back(e); }}, "選択画面", React.createElement(fa_1.default, {icon: "arrow-circle-right"})))));
     };
     return ResultModule;
 }(React.Component));
